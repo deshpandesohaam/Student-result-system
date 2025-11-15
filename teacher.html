@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Teacher Dashboard | Student Result System</title>
+
+  <script type="module" src="firebase-config.js"></script>
+
+  <script type="module">
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js";
+    import { app, db } from "./firebase-config.js";
+    import { collection, addDoc } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js";
+
+    const auth = getAuth(app);
+
+    // 🔐 Check login status
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        document.getElementById("teacherEmail").innerText = user.email;
+      } else {
+        // If not logged in → redirect to login page
+        window.location.href = "login.html";
+      }
+    });
+
+    // 📤 Upload Marks
+    async function uploadMarks() {
+      const roll = document.getElementById("roll").value.trim();
+      const name = document.getElementById("name").value.trim();
+      const subject = document.getElementById("subject").value.trim();
+      const marks = document.getElementById("marks").value.trim();
+
+      if (!roll || !name || !subject || !marks) {
+        alert("Please fill all fields.");
+        return;
+      }
+
+      try {
+        await addDoc(collection(db, "results"), {
+          roll: roll,
+          name: name,
+          subject: subject,
+          marks: parseInt(marks)
+        });
+        alert("✅ Marks uploaded successfully!");
+        document.getElementById("marksForm").reset();
+      } catch (error) {
+        console.error(error);
+        alert("❌ Error uploading marks: " + error.message);
+      }
+    }
+
+    // 🚪 Logout function
+    async function logoutTeacher() {
+      await signOut(auth);
+      alert("You have been logged out.");
+      window.location.href = "login.html";
+    }
+
+    // Make available for button
+    window.uploadMarks = uploadMarks;
+    window.logoutTeacher = logoutTeacher;
+  </script>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f6f9;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding-top: 50px;
+    }
+
+    .container {
+      background: #fff;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.1);
+      width: 400px;
+    }
+
+    h2 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    input {
+      width: 100%;
+      padding: 10px;
+      margin: 8px 0;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+    }
+
+    button {
+      width: 100%;
+      padding: 10px;
+      background: #007bff;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+
+    button:hover {
+      background: #0056b3;
+    }
+
+    .logout {
+      background: #e74c3c;
+    }
+
+    .logout:hover {
+      background: #c0392b;
+    }
+
+    .email {
+      text-align: center;
+      margin-bottom: 15px;
+      color: #555;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>📘 Upload Student Marks</h2>
+    <p class="email">Logged in as: <span id="teacherEmail"></span></p>
+    <form id="marksForm">
+      <input type="text" id="roll" placeholder="Roll Number" required />
+      <input type="text" id="name" placeholder="Student Name" required />
+      <input type="text" id="subject" placeholder="Subject" required />
+      <input type="number" id="marks" placeholder="Marks" required />
+      <button type="button" onclick="uploadMarks()">Upload Marks</button>
+      <button type="button" class="logout" onclick="logoutTeacher()">Logout</button>
+    </form>
+  </div>
+</body>
+</html>

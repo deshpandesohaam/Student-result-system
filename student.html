@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Student Result | Result System</title>
+
+  <script type="module" src="firebase-config.js"></script>
+
+  <script type="module">
+    import { app, db } from "./firebase-config.js";
+    import { collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js";
+
+    async function searchResult() {
+      const roll = document.getElementById("roll").value.trim();
+      const output = document.getElementById("output");
+      output.innerHTML = "";
+
+      if (!roll) {
+        alert("Please enter a roll number.");
+        return;
+      }
+
+      try {
+        const q = query(collection(db, "results"), where("roll", "==", roll));
+        const querySnapshot = await getDocs(q);
+
+        if (querySnapshot.empty) {
+          output.innerHTML = "<p>No result found for this roll number.</p>";
+          return;
+        }
+
+        querySnapshot.forEach((doc) => {
+          const data = doc.data();
+          output.innerHTML += `
+            <div class="result-card">
+              <h3>${data.name}</h3>
+              <p><strong>Roll No:</strong> ${data.roll}</p>
+              <p><strong>Subject:</strong> ${data.subject}</p>
+              <p><strong>Marks:</strong> ${data.marks}</p>
+            </div>
+          `;
+        });
+      } catch (error) {
+        console.error(error);
+        alert("Error fetching result: " + error.message);
+      }
+    }
+
+    window.searchResult = searchResult;
+  </script>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f8f9fa;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding-top: 60px;
+    }
+
+    .container {
+      background: #fff;
+      padding: 25px;
+      border-radius: 12px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      width: 400px;
+      text-align: center;
+    }
+
+    input {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+    }
+
+    button {
+      width: 100%;
+      padding: 10px;
+      background: #28a745;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #218838;
+    }
+
+    .result-card {
+      background: #f1f1f1;
+      padding: 15px;
+      border-radius: 10px;
+      margin-top: 15px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>🎓 Student Result Portal</h2>
+    <input type="text" id="roll" placeholder="Enter Roll Number">
+    <button onclick="searchResult()">Search Result</button>
+    <div id="output"></div>
+  </div>
+</body>
+</html>
